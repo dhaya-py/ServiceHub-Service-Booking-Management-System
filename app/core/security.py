@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.db.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -42,3 +42,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access only")
+    return current_user
+
+def require_provider(current_user: User = Depends(get_current_user)):
+    if current_user.role != "provider":
+        raise HTTPException(status_code=403, detail="Provider access only")
+    return current_user
