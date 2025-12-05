@@ -1,1 +1,1 @@
-# service-booking-platform
+# ServiceHub - service-booking-and-management-system
