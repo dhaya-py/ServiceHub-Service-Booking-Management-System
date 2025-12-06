@@ -16,6 +16,7 @@ from app.core.security import get_current_user  # if you want to allow auth-base
 
 router = APIRouter(prefix="/search", tags=["search"])
 
+# this module is not working right now, bugs-branch will fix it and merge the fixed changes to main branch
 
 def overlaps(start1, end1, start2, end2):
     return max(start1, start2) < min(end1, end2)
