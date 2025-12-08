@@ -12,6 +12,8 @@ from app.api.routes import providers_dashboard as providers_dashboard_router
 from app.api.routes import search as search_router
 from app.api.routes import customer_dashboard as customer_dashboard_router
 from app.api.routes import admin_dashboard as admin_dashboard_router
+from app.api.routes import admin_dashboard_advanced as admin_dashboard_advanced_router
+from app.api.routes import customer_dashboard_advanced as customer_dashboard_advanced_router
 
 
 app = FastAPI()
@@ -37,3 +39,5 @@ app.include_router(providers_dashboard_router.router)
 app.include_router(search_router.router)
 app.include_router(customer_dashboard_router.router)
 app.include_router(admin_dashboard_router.router)
+app.include_router(admin_dashboard_advanced_router.router)
+app.include_router(customer_dashboard_advanced_router.router)
