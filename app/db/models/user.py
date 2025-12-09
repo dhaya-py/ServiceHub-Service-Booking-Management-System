@@ -1,7 +1,11 @@
 # app/db/models/user.py
-from sqlalchemy import Boolean, Column, Float, Integer, String, Table, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+
+from datetime import datetime, timedelta, timezone
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # association table defined here (or you can put in separate module)
 provider_categories = Table(
@@ -29,6 +33,9 @@ class User(Base):
 
     is_active = Column(Boolean, nullable=True)
     is_provider_approved = Column(Boolean, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(IST), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(IST), onupdate=lambda: datetime.now(IST))
 
 
     # if this user is a provider, this relationship links to categories
