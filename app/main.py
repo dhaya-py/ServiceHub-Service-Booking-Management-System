@@ -14,9 +14,17 @@ from app.api.routes import customer_dashboard as customer_dashboard_router
 from app.api.routes import admin_dashboard as admin_dashboard_router
 from app.api.routes import admin_dashboard_advanced as admin_dashboard_advanced_router
 from app.api.routes import customer_dashboard_advanced as customer_dashboard_advanced_router
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Enable permissive CORS; tighten for production environments
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def startup():
