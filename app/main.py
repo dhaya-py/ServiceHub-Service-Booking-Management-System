@@ -21,7 +21,8 @@ app = FastAPI()
 # Enable permissive CORS; tighten for production environments
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # For development
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
