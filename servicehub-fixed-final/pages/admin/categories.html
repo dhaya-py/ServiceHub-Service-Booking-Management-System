@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories - Admin Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Service Categories</h4>
+                    <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                        <i class="bi bi-plus-lg me-1"></i> New Category
+                    </button>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 80px;">ID</th>
+                                        <th>Category Name</th>
+                                        <th>Description</th>
+                                        <th style="width: 150px;">Status</th>
+                                        <th class="text-end" style="width: 150px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status"></div>
+                                            <p class="mt-2 text-muted">Loading categories...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="categoryForm" onsubmit="saveCategory(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="categoryModalTitle">Add New Category</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="catId">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">Name *</label>
+                            <input type="text" class="form-control" id="catName" required placeholder="e.g. Plumbing">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">Description</label>
+                            <textarea class="form-control" id="catDesc" rows="3" placeholder="Category description..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnSaveCategory">Save Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.ADMIN, 'Manage Categories');
+
+        let allCategories = [];
+        let categoryModal;
+
+        async function loadCategories() {
+            const tbody = document.getElementById('categoriesTableBody');
+            try {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
+                allCategories = await api.get(API_ENDPOINTS.CATEGORIES);
+
+                if (!allCategories || allCategories.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-tags fs-1 d-block mb-3"></i>No categories found.</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                allCategories.forEach(c => {
+                    html += `
+                        <tr>
+                            <td class="text-muted fw-bold">#${c.id}</td>
+                            <td class="fw-bold">${c.name}</td>
+                            <td class="text-muted small">${Utils.truncateText(c.description || 'No description', 60)}</td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Active</span></td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-light me-1" onclick="editCategory(${c.id})"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+
+            } catch (error) {
+                Utils.handleError(error);
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load categories.</td></tr>`;
+            }
+        }
+
+        function showAddCategoryModal() {
+            document.getElementById('categoryForm').reset();
+            document.getElementById('catId').value = '';
+            document.getElementById('categoryModalTitle').textContent = 'Add New Category';
+            categoryModal.show();
+        }
+
+        function editCategory(id) {
+            const c = allCategories.find(x => x.id === id);
+            if(!c) return;
+
+            document.getElementById('catId').value = c.id;
+            document.getElementById('catName').value = c.name;
+            document.getElementById('catDesc').value = c.description || '';
+            document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+            categoryModal.show();
+        }
+
+        async function saveCategory(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveCategory');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            const id = document.getElementById('catId').value;
+            const data = {
+                name: document.getElementById('catName').value.trim(),
+                description: document.getElementById('catDesc').value.trim(),
+                is_active: true
+            };
+
+            try {
+                if (id) {
+                    await api.put(API_ENDPOINTS.CATEGORY_BY_ID(id), data);
+                    Utils.showToast('Category updated successfully', 'success');
+                } else {
+                    await api.post(API_ENDPOINTS.CATEGORIES, data);
+                    Utils.showToast('Category created successfully', 'success');
+                }
+                categoryModal.hide();
+                loadCategories();
+            } catch (error) {
+                Utils.handleError(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Category';
+            }
+        }
+
+        async function deleteCategory(id) {
+            const confirmed = await Utils.confirmAction('Are you sure you want to delete this category?');
+            if(!confirmed) return;
+
+            try {
+                await api.delete(API_ENDPOINTS.CATEGORY_BY_ID(id));
+                Utils.showToast('Category deleted successfully.', 'success');
+                loadCategories();
+            } catch (error) {
+                Utils.handleError(error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            loadCategories();
+        });
+    </script>
+</body>
+</html>

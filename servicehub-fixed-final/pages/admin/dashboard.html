@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ServiceHub</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area">
+                <!-- Stats Grid -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="stat-label">Total Users</div>
+                                        <div class="stat-value" id="totalUsers">0</div>
+                                    </div>
+                                    <i class="bi bi-people fs-2 text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="stat-label">Providers</div>
+                                        <div class="stat-value" id="totalProviders">0</div>
+                                    </div>
+                                    <i class="bi bi-briefcase fs-2 text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="stat-label">Services</div>
+                                        <div class="stat-value" id="totalServices">0</div>
+                                    </div>
+                                    <i class="bi bi-grid fs-2 text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="stat-label">Bookings</div>
+                                        <div class="stat-value" id="totalBookings">0</div>
+                                    </div>
+                                    <i class="bi bi-calendar-check fs-2 text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Booking Trends (Last 30 Days)</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="bookingTrendsChart" height="80"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Earnings by Category</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="earningsChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Providers -->
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Top Providers</h5>
+                                <a href="providers.html" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="topProvidersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Provider</th>
+                                                <th>Services</th>
+                                                <th>Bookings</th>
+                                                <th>Rating</th>
+                                                <th>Revenue</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">
+                                                    <div class="spinner-border text-primary"></div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Activity</h5>
+                            </div>
+                            <div class="card-body" id="recentActivity">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.ADMIN, 'Admin Dashboard');
+
+        let bookingTrendsChart, earningsChart;
+
+        async function loadDashboard() {
+            try {
+                const data = await api.get(API_ENDPOINTS.ADMIN_DASHBOARD);
+
+                // Update stats
+                document.getElementById('totalUsers').textContent = data.total_users || 0;
+                document.getElementById('totalProviders').textContent = data.total_providers || 0;
+                document.getElementById('totalServices').textContent = data.total_services || 0;
+                document.getElementById('totalBookings').textContent = data.total_bookings || 0;
+
+                // Load charts
+                loadBookingTrendsChart(data.booking_trends || []);
+                loadEarningsChart(data.earnings_by_category || []);
+
+                // Load tables
+                loadTopProviders(data.top_providers || []);
+                loadRecentActivity(data);
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                Utils.handleError(error);
+            }
+        }
+
+        function loadBookingTrendsChart(trends) {
+            const ctx = document.getElementById('bookingTrendsChart');
+            
+            if (bookingTrendsChart) {
+                bookingTrendsChart.destroy();
+            }
+
+            const labels = trends.map(t => t.date);
+            const data = trends.map(t => t.count);
+
+            bookingTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: data,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadEarningsChart(earnings) {
+            const ctx = document.getElementById('earningsChart');
+            
+            if (earningsChart) {
+                earningsChart.destroy();
+            }
+
+            const labels = earnings.map(e => e.category_name);
+            const data = earnings.map(e => e.total_earnings);
+
+            earningsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6',
+                            '#06b6d4'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadTopProviders(providers) {
+            const tbody = document.querySelector('#topProvidersTable tbody');
+            
+            if (!providers || providers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <p class="text-muted mb-0">No providers yet</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            providers.slice(0, 5).forEach(provider => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-2">
+                                    ${provider.email.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${provider.name || provider.email}</div>
+                                    <small class="text-muted">${provider.email}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${provider.total_services || 0}</td>
+                        <td>${provider.total_bookings || 0}</td>
+                        <td>
+                            ${Utils.generateStarRating(provider.average_rating || 0)}
+                            <span class="text-muted ms-1">${(provider.average_rating || 0).toFixed(1)}</span>
+                        </td>
+                        <td class="fw-bold">${Utils.formatCurrency(provider.total_revenue || 0)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function loadRecentActivity(data) {
+            const container = document.getElementById('recentActivity');
+            
+            const activities = [
+                { text: `${data.bookings_today || 0} bookings today`, icon: 'bi-calendar-check', time: 'Today' },
+                { text: `${data.bookings_last_7_days || 0} bookings this week`, icon: 'bi-graph-up', time: 'This week' },
+                { text: `${data.new_users || 0} new users`, icon: 'bi-person-plus', time: 'This month' }
+            ];
+
+            let html = '';
+            activities.forEach(activity => {
+                html += `
+                    <div class="d-flex mb-3 pb-3 border-bottom">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="bi ${activity.icon} fs-5 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0">${activity.text}</p>
+                            <small class="text-muted">${activity.time}</small>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

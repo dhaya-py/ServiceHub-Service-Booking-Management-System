@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServiceHub - Book Professional Services Instantly</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/global.css">
+    
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.375rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.95;
+        }
+        
+        .hero-cta {
+            gap: 1rem;
+        }
+        
+        .hero-cta .btn {
+            padding: 14px 32px;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .btn-white {
+            background: white;
+            color: var(--primary-color);
+        }
+        
+        .btn-white:hover {
+            background: #f8f9fa;
+            color: var(--primary-dark);
+        }
+        
+        .feature-card {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2.5rem;
+        }
+        
+        .feature-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-section {
+            background: var(--gray-900);
+            color: white;
+            padding: 80px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 1.125rem;
+            color: #9ca3af;
+        }
+        
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand-custom {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-decoration: none;
+        }
+        
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.375rem;
+            margin-right: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.25rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+            
+            .hero-cta {
+                flex-direction: column;
+            }
+            
+            .hero-cta .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand-custom" href="/">
+                <div class="brand-logo">S</div>
+                <span>ServiceHub</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pages/services.html">Browse Services</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-primary" href="pages/login.html">Sign In</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary" href="pages/register.html">Get Started</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7 hero-content">
+                    <h1 class="hero-title">Professional Services at Your Doorstep</h1>
+                    <p class="hero-subtitle">Connect with verified professionals for all your service needs. Quick, reliable, and hassle-free.</p>
+                    <div class="hero-cta d-flex">
+                        <a href="pages/services.html" class="btn btn-white btn-lg">
+                            <i class="bi bi-search me-2"></i>Browse Services
+                        </a>
+                        <a href="pages/register.html" class="btn btn-outline-light btn-lg">
+                            Become a Provider
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-5 mt-5 mt-lg-0 text-center">
+                    <div class="hero-image">
+                        <i class="bi bi-grid-3x3-gap" style="font-size: 15rem; opacity: 0.2;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold mb-3">Why Choose ServiceHub?</h2>
+                <p class="lead text-muted">Everything you need to book and manage professional services</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3 class="feature-title">Verified Professionals</h3>
+                        <p class="text-muted">All service providers are thoroughly vetted and verified for your safety and peace of mind.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <h3 class="feature-title">Easy Booking</h3>
+                        <p class="text-muted">Book services in minutes with our intuitive interface and real-time availability.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Quality Assured</h3>
+                        <p class="text-muted">Read reviews, compare ratings, and choose the best professional for your needs.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <h3 class="feature-title">Secure Payments</h3>
+                        <p class="text-muted">Safe and encrypted payment processing with multiple payment options.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-headset"></i>
+                        </div>
+                        <h3 class="feature-title">24/7 Support</h3>
+                        <p class="text-muted">Our customer support team is always here to help you with any questions.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h3 class="feature-title">Track Progress</h3>
+                        <p class="text-muted">Monitor your bookings and communicate with providers in real-time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                    <div class="stat-item">
+                        <div class="stat-number">5000+</div>
+                        <div class="stat-label">Verified Providers</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                    <div class="stat-item">
+                        <div class="stat-number">50K+</div>
+                        <div class="stat-label">Happy Customers</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Service Categories</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <div class="stat-number">99%</div>
+                        <div class="stat-label">Satisfaction Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+                <p class="lead text-muted">Get started in three simple steps</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="mb-3">
+                        <div class="feature-icon mx-auto">
+                            <i class="bi bi-search"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">1. Search & Compare</h4>
+                    <p class="text-muted">Browse through our wide range of services and compare providers based on ratings, reviews, and pricing.</p>
+                </div>
+                
+                <div class="col-md-4 text-center">
+                    <div class="mb-3">
+                        <div class="feature-icon mx-auto">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">2. Book Instantly</h4>
+                    <p class="text-muted">Choose your preferred time slot and book the service instantly with just a few clicks.</p>
+                </div>
+                
+                <div class="col-md-4 text-center">
+                    <div class="mb-3">
+                        <div class="feature-icon mx-auto">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">3. Get It Done</h4>
+                    <p class="text-muted">Relax while our verified professionals deliver exceptional service at your convenience.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 my-5 bg-light">
+        <div class="container text-center">
+            <h2 class="display-6 fw-bold mb-3">Ready to Get Started?</h2>
+            <p class="lead text-muted mb-4">Join thousands of satisfied customers today</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="pages/register.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Create Account
+                </a>
+                <a href="pages/services.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-grid me-2"></i>Browse Services
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="brand-logo">S</div>
+                        <h5 class="mb-0 ms-2">ServiceHub</h5>
+                    </div>
+                    <p class="text-muted">Your trusted platform for booking professional services instantly.</p>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h6 class="fw-bold mb-3">Company</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-muted text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Careers</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h6 class="fw-bold mb-3">Support</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Safety</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none">Terms</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="fw-bold mb-3">Stay Connected</h6>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white"><i class="bi bi-facebook fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-twitter fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-instagram fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-linkedin fs-4"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <div class="text-center text-muted">
+                <small>&copy; 2026 ServiceHub. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
