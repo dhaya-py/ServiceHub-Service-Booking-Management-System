@@ -111,9 +111,18 @@ def delete_service(
 
 
 
+# Get a single service by ID
+
+@router.get("/{service_id}", response_model=ServiceResponse)
+def get_service_by_id(service_id: int, db: Session = Depends(get_db)):
+    service = db.query(Service).filter(Service.id == service_id, Service.is_active == True).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return service
+
 # Get services by category
 
-@router.get("/services/category/{category_id}", response_model=list[ServiceResponse])
+@router.get("/category/{category_id}", response_model=list[ServiceResponse])
 def get_services_by_category(category_id: int, db: Session = Depends(get_db)):
     services = (
         db.query(Service)
