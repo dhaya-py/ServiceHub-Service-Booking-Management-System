@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Bookings - Admin Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Platform Bookings</h4>
+                </div>
+
+                <!-- Filters -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-9">
+                                <ul class="nav nav-pills" id="bookingStatusTabs">
+                                    <li class="nav-item"><a class="nav-link active" href="#" data-status="all" onclick="filterBookings('all', this); return false;">All</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="#" data-status="pending" onclick="filterBookings('pending', this); return false;">Pending</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="#" data-status="accepted" onclick="filterBookings('accepted', this); return false;">Accepted</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="#" data-status="completed" onclick="filterBookings('completed', this); return false;">Completed</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-outline-secondary" onclick="loadBookings()"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Service & Date</th>
+                                        <th>Customer</th>
+                                        <th>Provider</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status"></div>
+                                            <p class="mt-2 text-muted">Loading bookings...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Detail Modal -->
+    <div class="modal fade" id="bookingDetailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Admin View: Booking Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="bookingDetailBody">
+                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.ADMIN, 'Manage Bookings');
+
+        let allBookings = [];
+        let currentStatusFilter = 'all';
+        let bookingModal;
+
+        async function loadBookings() {
+            const tbody = document.getElementById('bookingsTableBody');
+            try {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
+                allBookings = await api.get(API_ENDPOINTS.BOOKINGS);
+                renderBookings();
+            } catch (error) {
+                Utils.handleError(error);
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load bookings.</td></tr>`;
+            }
+        }
+
+        function filterBookings(status, el) {
+            currentStatusFilter = status;
+            document.querySelectorAll('#bookingStatusTabs .nav-link').forEach(link => link.classList.remove('active'));
+            el.classList.add('active');
+            renderBookings();
+        }
+
+        function renderBookings() {
+            const tbody = document.getElementById('bookingsTableBody');
+            let filtered = allBookings;
+
+            if (currentStatusFilter !== 'all') {
+                filtered = allBookings.filter(b => b.status === currentStatusFilter);
+            }
+
+            if (!filtered || filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted"><i class="bi bi-calendar-x fs-1 d-block mb-3"></i>No bookings found in this category.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(b => {
+                html += `
+                    <tr>
+                        <td class="fw-bold text-muted">#${b.id}</td>
+                        <td>
+                            <div class="fw-bold text-truncate" style="max-width: 250px;" title="${b.service_name || 'Service'}">${b.service_name || 'Service'}</div>
+                            <div class="text-muted small"><i class="bi bi-calendar me-1"></i>${Utils.formatDate(b.booking_date)} at ${Utils.formatTime(b.booking_time)}</div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">${b.customer_name || 'Customer'}</div>
+                            <div class="text-muted small">${b.customer_email || ''}</div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">${b.provider_name || 'Provider'}</div>
+                            <div class="text-muted small">ID: #${b.provider_id || '?'}</div>
+                        </td>
+                        <td class="fw-bold text-primary">${Utils.formatCurrency(b.amount || 0)}</td>
+                        <td>${Utils.getStatusBadge(b.status)}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-light border" onclick="viewBooking(${b.id})"><i class="bi bi-search"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function viewBooking(id) {
+            const b = allBookings.find(x => x.id === id);
+            if(!b) return;
+
+            document.getElementById('bookingDetailBody').innerHTML = `
+                <div class="mb-4 text-center">
+                    <h5 class="mb-1">${b.service_name || 'Service'}</h5>
+                    <div>${Utils.getStatusBadge(b.status)}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase fw-bold">Booking ID</small>
+                        <div>#${b.id}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase fw-bold">Amount</small>
+                        <div class="fw-bold text-primary">${Utils.formatCurrency(b.amount || 0)}</div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase fw-bold">Customer</small>
+                        <div>${b.customer_name || 'N/A'}</div>
+                        <div class="small text-muted">${b.customer_email || ''}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase fw-bold">Provider</small>
+                        <div>${b.provider_name || 'N/A'}</div>
+                        <div class="small text-muted">ID: ${b.provider_id || '?'}</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted text-uppercase fw-bold">Schedule</small>
+                    <div>${Utils.formatDate(b.booking_date)} at ${Utils.formatTime(b.booking_time)}</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted text-uppercase fw-bold">Address</small>
+                    <div class="p-2 border rounded bg-light small">${b.address || 'No address provided'}</div>
+                </div>
+            `;
+            bookingModal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bookingModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
+            loadBookings();
+        });
+    </script>
+</body>
+</html>

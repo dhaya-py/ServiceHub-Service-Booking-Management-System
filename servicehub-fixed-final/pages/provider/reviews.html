@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews - ServiceHub</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area pt-3">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm border-0 bg-primary text-white">
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+                                <h6 class="text-white-50 text-uppercase fw-bold mb-2">Average Rating</h6>
+                                <div class="display-3 fw-bold mb-2" id="avgRatingScore">0.0</div>
+                                <div class="fs-4 mb-2" id="avgRatingStars">
+                                    <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                </div>
+                                <p class="mb-0 text-white-50">Based on <span id="totalReviewsCount">0</span> reviews</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8 mt-4 mt-md-0">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-4">Rating Breakdown</h5>
+                                <div id="ratingBreakdown">
+                                    <div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-bold">Recent Reviews</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush" id="reviewsList">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary"></div>
+                                <p class="mt-3 text-muted">Loading reviews...</p>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.PROVIDER, 'Reviews');
+
+        async function loadReviews() {
+            try {
+                const user = Auth.getUser();
+                if (!user || user.role !== USER_ROLES.PROVIDER) return;
+
+                // Call provider reviews endpoint
+                const url = API_ENDPOINTS.PROVIDER_REVIEWS ? API_ENDPOINTS.PROVIDER_REVIEWS(user.id) : '/reviews/provider/' + user.id;
+                const reviews = await api.get(url);
+                
+                const list = document.getElementById('reviewsList');
+                
+                if (!reviews || reviews.length === 0) {
+                    list.innerHTML = `
+                        <div class="py-5 text-center text-muted">
+                            <i class="bi bi-star fs-1 d-block mb-3 text-light"></i>
+                            <h5>No Reviews Yet</h5>
+                            <p>You haven't received any reviews for your services.</p>
+                        </div>
+                    `;
+                    document.getElementById('ratingBreakdown').innerHTML = '<p class="text-muted text-center pt-3">No data available for breakdown.</p>';
+                    return;
+                }
+
+                // Calculate averages
+                let sum = 0;
+                let counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+
+                reviews.forEach(r => {
+                    const rating = Math.round(r.rating || 0);
+                    sum += rating;
+                    if (rating >= 1 && rating <= 5) counts[rating]++;
+                });
+
+                const avg = (sum / reviews.length).toFixed(1);
+                
+                // Update top stats
+                document.getElementById('avgRatingScore').textContent = avg;
+                document.getElementById('avgRatingStars').innerHTML = Utils.generateStarRating(parseFloat(avg));
+                document.getElementById('totalReviewsCount').textContent = reviews.length;
+
+                // Breakdown HTML
+                let breakdownHtml = '';
+                for (let i = 5; i >= 1; i--) {
+                    const pct = Math.round((counts[i] / reviews.length) * 100) || 0;
+                    breakdownHtml += `
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="text-muted fw-bold me-2" style="width: 45px;">${i} Stars</span>
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="text-muted ms-3" style="width: 35px; text-align:right;">${pct}%</span>
+                        </div>
+                    `;
+                }
+                document.getElementById('ratingBreakdown').innerHTML = breakdownHtml;
+
+                // Render reviews
+                let html = '';
+                reviews.forEach(review => {
+                    html += `
+                        <li class="list-group-item p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold">${review.customer_name || 'Customer'}</h6>
+                                <span class="text-muted small">${Utils.getRelativeTime(review.created_at)}</span>
+                            </div>
+                            <div class="mb-2">
+                                ${Utils.generateStarRating(review.rating)}
+                                <span class="ms-2 badge bg-light text-dark border">${review.service_name || 'Service'}</span>
+                            </div>
+                            <p class="mb-0 text-muted">${review.comment || 'No comment provided.'}</p>
+                        </li>
+                    `;
+                });
+                
+                list.innerHTML = html;
+
+            } catch (error) {
+                Utils.handleError(error, 'reviewsList');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadReviews);
+    </script>
+</body>
+</html>

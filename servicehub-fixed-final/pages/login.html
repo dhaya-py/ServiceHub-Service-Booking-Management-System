@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - ServiceHub</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card fade-in">
+            <div class="auth-header">
+                <div class="auth-logo">S</div>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Sign in to access your account</p>
+            </div>
+            
+            <div class="auth-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="password-toggle">
+                            <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                            <i class="bi bi-eye password-toggle-icon" id="togglePassword"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="loginBtn">
+                        <span id="loginBtnText">Sign In</span>
+                        <span id="loginBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </form>
+                
+                <div class="auth-link">
+                    Don't have an account? <a href="register.html">Sign up</a>
+                </div>
+                
+                <div class="auth-link mt-2">
+                    <a href="../index.html">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/config.js?v=2"></script>
+    <script src="../js/api-client.js?v=2"></script>
+    <script src="../js/auth.js?v=2"></script>
+    <script src="../js/utils.js?v=2"></script>
+    
+    <script>
+        // Check if already logged in
+        if (Auth.isAuthenticated()) {
+            const user = Auth.getUser();
+            if (user) {
+                Auth.redirectToDashboard(user.role);
+            }
+        }
+
+        // Password toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // Validation
+            if (!email || !password) {
+                Utils.showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (!Utils.isValidEmail(email)) {
+                Utils.showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginBtnSpinner = document.getElementById('loginBtnSpinner');
+            
+            loginBtn.disabled = true;
+            loginBtnText.classList.add('d-none');
+            loginBtnSpinner.classList.remove('d-none');
+            
+            try {
+                const user = await Auth.login(email, password);
+                Utils.showToast('Login successful!', 'success');
+                
+                // Small delay for UX
+                setTimeout(() => {
+                    Auth.redirectToDashboard(user.role);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                Utils.showToast(error.message || 'Login failed. Please check your credentials.', 'error');
+                
+                // Reset button state
+                loginBtn.disabled = false;
+                loginBtnText.classList.remove('d-none');
+                loginBtnSpinner.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

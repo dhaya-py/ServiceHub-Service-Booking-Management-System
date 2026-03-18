@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Services - ServiceHub</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+    <link rel="stylesheet" href="../../css/services.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area">
+                <div class="row">
+                    <!-- Filters Sidebar -->
+                    <div class="col-lg-3">
+                        <div class="card filters-sidebar mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4">Filters</h5>
+                                
+                                <!-- Search -->
+                                <div class="filter-group mb-3">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search services...">
+                                </div>
+
+                                <!-- Category Filter -->
+                                <div class="filter-group mb-3">
+                                    <div class="filter-title text-muted small fw-bold mb-2">Category</div>
+                                    <select class="form-select" id="categoryFilter">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                </div>
+
+                                <!-- Price Range -->
+                                <div class="filter-group mb-3">
+                                    <div class="filter-title text-muted small fw-bold mb-2">Price Range</div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="minPrice" placeholder="Min">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" class="form-control" id="maxPrice" placeholder="Max">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sort -->
+                                <div class="filter-group mb-4">
+                                    <div class="filter-title text-muted small fw-bold mb-2">Sort By</div>
+                                    <select class="form-select" id="sortFilter">
+                                        <option value="relevance">Relevance</option>
+                                        <option value="price_asc">Price: Low to High</option>
+                                        <option value="price_desc">Price: High to Low</option>
+                                        <option value="popularity">Popularity</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+                                <button class="btn btn-outline-secondary w-100 mt-2" id="clearFilters">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Services Grid -->
+                    <div class="col-lg-9">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <span id="resultsCount" class="fw-bold">0</span> services found
+                            </div>
+                        </div>
+
+                        <div id="servicesGrid" class="row g-4">
+                            <!-- Loading State -->
+                            <div class="col-12 text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-3 text-muted">Loading services...</p>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav class="mt-5" id="paginationNav" style="display: none;">
+                            <ul class="pagination justify-content-center"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.CUSTOMER, 'Browse Services');
+
+        let categories = [];
+        let currentPage = 1;
+        const perPage = 12;
+
+        async function loadCategories() {
+            try {
+                categories = await api.get(API_ENDPOINTS.CATEGORIES, {}, false);
+                const select = document.getElementById('categoryFilter');
+                categories.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadServices(page = 1) {
+            const grid = document.getElementById('servicesGrid');
+            const searchQuery = document.getElementById('searchInput').value.trim();
+            const categoryId = document.getElementById('categoryFilter').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            const params = {
+                page,
+                per_page: perPage
+            };
+
+            if (searchQuery) params.q = searchQuery;
+            if (categoryId) params.category_id = categoryId;
+            if (minPrice) params.min_price = minPrice;
+            if (maxPrice) params.max_price = maxPrice;
+            if (sort) params.sort = sort;
+
+            try {
+                grid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3 text-muted">Loading services...</p>
+                    </div>`;
+
+                const data = await api.get(API_ENDPOINTS.SEARCH_SERVICES, params);
+                
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-12">
+                            <div class="empty-state text-center py-5 bg-white rounded border">
+                                <div class="empty-state-icon mb-3"><i class="bi bi-search" style="font-size: 3rem; color: #ccc;"></i></div>
+                                <div class="empty-state-title h5">No Services Found</div>
+                                <div class="empty-state-text text-muted">Try adjusting your filters</div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('resultsCount').textContent = '0';
+                    return;
+                }
+
+                document.getElementById('resultsCount').textContent = data.total || data.items.length;
+
+                let html = '';
+                data.items.forEach(service => {
+                    html += `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card service-card h-100" style="cursor: pointer; transition: transform 0.2s;" onclick="viewService(${service.id})" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                <div class="service-image bg-primary text-white d-flex align-items-center justify-content-center" style="height: 120px; border-radius: calc(0.375rem - 1px) calc(0.375rem - 1px) 0 0;">
+                                    <i class="bi bi-briefcase fs-1"></i>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <div class="service-category mb-2 text-primary small fw-bold">
+                                        <i class="bi bi-tag me-1"></i>${service.category_name || 'Uncategorized'}
+                                    </div>
+                                    <h5 class="service-title">${service.name}</h5>
+                                    <p class="text-muted small mb-3 flex-grow-1">${Utils.truncateText(service.description || '', 80)}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                                        <div class="service-price fw-bold text-dark fs-5">${Utils.formatCurrency(service.price)}</div>
+                                        <div class="service-rating small">
+                                            ${Utils.generateStarRating(service.average_rating || 0)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                grid.innerHTML = html;
+
+                // Update pagination
+                updatePagination(page, data.pages || 1);
+
+            } catch (error) {
+                console.error('Error loading services:', error);
+                grid.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Failed to load services. Please try again.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function updatePagination(current, total) {
+            const nav = document.getElementById('paginationNav');
+            const ul = nav.querySelector('.pagination');
+            
+            if (total <= 1) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'block';
+            let html = '';
+
+            // Previous
+            html += `
+                <li class="page-item ${current === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${current - 1}); return false;">Previous</a>
+                </li>
+            `;
+
+            // Pages
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+                    html += `
+                        <li class="page-item ${i === current ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                } else if (i === current - 2 || i === current + 2) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            // Next
+            html += `
+                <li class="page-item ${current === total ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${current + 1}); return false;">Next</a>
+                </li>
+            `;
+
+            ul.innerHTML = html;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadServices(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function viewService(serviceId) {
+            window.location.href = `../../pages/service-detail.html?id=${serviceId}`;
+        }
+
+        // Event Listeners
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            currentPage = 1;
+            loadServices(1);
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            document.getElementById('sortFilter').value = 'relevance';
+            currentPage = 1;
+            loadServices(1);
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                currentPage = 1;
+                loadServices(1);
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            loadServices(1);
+        });
+    </script>
+</body>
+</html>

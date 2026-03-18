@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ServiceHub</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <nav class="top-navbar"></nav>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Stats Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-label">Total Bookings</div>
+                                        <div class="stat-value" id="totalBookings">0</div>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="bi bi-calendar-check fs-3 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-label">Upcoming</div>
+                                        <div class="stat-value" id="upcomingBookings">0</div>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="bi bi-clock-history fs-3 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-label">Completed</div>
+                                        <div class="stat-value" id="completedBookings">0</div>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="bi bi-check-circle fs-3 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-label">Total Spent</div>
+                                        <div class="stat-value" id="totalSpent">₹0</div>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="bi bi-currency-rupee fs-3 text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="row g-4">
+                    <!-- Upcoming Bookings -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Upcoming Bookings</h5>
+                                <a href="bookings.html" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body" id="upcomingBookingsList">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="mt-3 text-muted">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Services -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recommended Services</h5>
+                            </div>
+                            <div class="card-body" id="recommendedServices">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row g-4 mt-0">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Activity</h5>
+                            </div>
+                            <div class="card-body" id="recentActivity">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        // Initialize dashboard
+        DashboardComponent.init(USER_ROLES.CUSTOMER, 'Dashboard');
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = await api.get(API_ENDPOINTS.CUSTOMER_DASHBOARD);
+                
+                // Update stats
+                document.getElementById('totalBookings').textContent = data.total_bookings || 0;
+                document.getElementById('upcomingBookings').textContent = data.upcoming_bookings?.length || 0;
+                document.getElementById('completedBookings').textContent = 
+                    data.past_bookings?.filter(b => b.status === 'completed').length || 0;
+                document.getElementById('totalSpent').textContent = Utils.formatCurrency(data.total_spent || 0);
+
+                // Load upcoming bookings
+                loadUpcomingBookings(data.upcoming_bookings || []);
+
+                // Load recommended services
+                loadRecommendedServices(data.recommended_services || []);
+
+                // Load recent activity
+                loadRecentActivity(data);
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                Utils.handleError(error);
+            }
+        }
+
+        function loadUpcomingBookings(bookings) {
+            const container = document.getElementById('upcomingBookingsList');
+            
+            if (!bookings || bookings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-calendar-x"></i>
+                        </div>
+                        <div class="empty-state-title">No Upcoming Bookings</div>
+                        <div class="empty-state-text">Book a service to get started</div>
+                        <a href="services.html" class="btn btn-primary mt-3">Browse Services</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="list-group list-group-flush">';
+            
+            bookings.slice(0, 5).forEach(booking => {
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${booking.service_name || 'Service'}</h6>
+                                <p class="mb-1 text-muted small">
+                                    <i class="bi bi-calendar me-1"></i>${Utils.formatDate(booking.date)}
+                                    <i class="bi bi-clock ms-3 me-1"></i>${Utils.formatTime(booking.time)}
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    <i class="bi bi-person me-1"></i>${booking.provider_name || 'Provider'}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                ${Utils.getStatusBadge(booking.status)}
+                                <div class="mt-2">
+                                    <small class="text-muted">${Utils.formatCurrency(booking.price)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function loadRecommendedServices(services) {
+            const container = document.getElementById('recommendedServices');
+            
+            if (!services || services.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="bi bi-grid-3x3 fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">No recommendations yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            services.slice(0, 3).forEach(service => {
+                html += `
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="flex-shrink-0">
+                            <div class="bg-light rounded p-3">
+                                <i class="bi bi-briefcase fs-4 text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">${service.name}</h6>
+                            <p class="mb-0 text-muted small">${Utils.formatCurrency(service.price)}</p>
+                        </div>
+                        <a href="service-detail.html?id=${service.id}" class="btn btn-sm btn-outline-primary">Book</a>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function loadRecentActivity(data) {
+            const container = document.getElementById('recentActivity');
+            const recentBookings = [...(data.upcoming_bookings || []), ...(data.past_bookings || [])]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 5);
+
+            if (recentBookings.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="timeline">';
+            recentBookings.forEach(booking => {
+                const statusIcon = {
+                    pending: 'bi-clock',
+                    accepted: 'bi-check-circle',
+                    completed: 'bi-check-circle-fill',
+                    cancelled: 'bi-x-circle',
+                    rejected: 'bi-x-circle'
+                }[booking.status] || 'bi-circle';
+
+                html += `
+                    <div class="d-flex mb-3 pb-3 border-bottom">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="bi ${statusIcon} fs-5 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-1">
+                                <strong>${booking.service_name}</strong> - ${booking.status}
+                            </p>
+                            <p class="text-muted small mb-0">
+                                ${Utils.getRelativeTime(booking.created_at)}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

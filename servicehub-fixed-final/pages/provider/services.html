@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Services - ServiceHub</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">My Services</h4>
+                    <button class="btn btn-primary" onclick="showAddServiceModal()">
+                        <i class="bi bi-plus-lg me-1"></i> Add New Service
+                    </button>
+                </div>
+
+                <div class="row" id="servicesGrid">
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3 text-muted">Loading your services...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addServiceForm" onsubmit="addService(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Service</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="svcName">Service Name *</label>
+                            <input type="text" class="form-control" id="svcName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="svcCategory">Category *</label>
+                            <select class="form-select" id="svcCategory" required>
+                                <option value="">Select a Category</option>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="svcPrice">Price (₹) *</label>
+                                <input type="number" class="form-control" id="svcPrice" required min="0">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="svcDuration">Duration (Mins) *</label>
+                                <input type="number" class="form-control" id="svcDuration" required min="15" step="15">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="svcDesc">Description *</label>
+                            <textarea class="form-control" id="svcDesc" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnSaveService">Save Service</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.PROVIDER, 'My Services');
+
+        let serviceModal;
+
+        async function loadCategories() {
+            try {
+                const categories = await api.get(API_ENDPOINTS.CATEGORIES, {}, false);
+                const select = document.getElementById('svcCategory');
+                categories.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadServices() {
+            const grid = document.getElementById('servicesGrid');
+            try {
+                // Assuming backend /services returns the provider's services when requested by a provider
+                const services = await api.get(API_ENDPOINTS.PROVIDER_SERVICES);
+                
+                if (!services || services.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-12 mt-4">
+                            <div class="empty-state text-center py-5 bg-white rounded border">
+                                <div class="empty-state-icon mb-3"><i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i></div>
+                                <div class="empty-state-title h5">No Services Found</div>
+                                <div class="empty-state-text text-muted mb-4">You haven't added any services yet.</div>
+                                <button class="btn btn-primary" onclick="showAddServiceModal()">Add Your First Service</button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                services.forEach(service => {
+                    html += `
+                        <div class="col-md-6 col-xl-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold text-truncate">${service.name}</h5>
+                                    <div class="badge bg-light text-dark mb-3"><i class="bi bi-tag me-1"></i>${service.category_name || 'Category ' + service.category_id}</div>
+                                    <p class="card-text text-muted small" style="min-height: 48px;">${Utils.truncateText(service.description, 100)}</p>
+                                    
+                                    <div class="d-flex justify-content-between text-muted small mt-3 border-top pt-3">
+                                        <span><i class="bi bi-cash me-1"></i>${Utils.formatCurrency(service.price)}</span>
+                                        <span><i class="bi bi-clock me-1"></i>${service.duration_minutes} Mins</span>
+                                    </div>
+                                    
+                                    <div class="mt-3 pt-2 text-end">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteService(${service.id}, event)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                grid.innerHTML = html;
+            } catch (error) {
+                Utils.handleError(error, 'servicesGrid');
+            }
+        }
+
+        function showAddServiceModal() {
+            document.getElementById('addServiceForm').reset();
+            serviceModal.show();
+        }
+
+        async function addService(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveService');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            const data = {
+                name: document.getElementById('svcName').value.trim(),
+                description: document.getElementById('svcDesc').value.trim(),
+                price: parseFloat(document.getElementById('svcPrice').value),
+                duration_minutes: parseInt(document.getElementById('svcDuration').value),
+                category_id: parseInt(document.getElementById('svcCategory').value),
+                is_active: true
+            };
+
+            try {
+                await api.post(API_ENDPOINTS.PROVIDER_SERVICES, data);
+                Utils.showToast('Service added successfully!', 'success');
+                serviceModal.hide();
+                loadServices();
+            } catch (error) {
+                Utils.handleError(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Service';
+            }
+        }
+
+        async function deleteService(id, e) {
+            e.stopPropagation();
+            Utils.showToast('Delete functionality coming soon.', 'warning');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            serviceModal = new bootstrap.Modal(document.getElementById('addServiceModal'));
+            loadCategories();
+            loadServices();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - ServiceHub</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard-layout.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar"></aside>
+
+        <main class="main-content">
+            <nav class="top-navbar"></nav>
+
+            <div class="content-area">
+                <!-- Filter Tabs -->
+                <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                            All Bookings
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                            Pending Requests
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+                            Upcoming (Accepted)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab">
+                            Past/Completed
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="bookingTabContent">
+                    <!-- All Bookings -->
+                    <div class="tab-pane fade show active" id="all" role="tabpanel">
+                        <div id="allBookingsContent">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary"></div>
+                                <p class="mt-3">Loading bookings...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Bookings -->
+                    <div class="tab-pane fade" id="pending" role="tabpanel">
+                        <div id="pendingBookingsContent"></div>
+                    </div>
+
+                    <!-- Upcoming Bookings -->
+                    <div class="tab-pane fade" id="upcoming" role="tabpanel">
+                        <div id="upcomingBookingsContent"></div>
+                    </div>
+
+                    <!-- Past Bookings -->
+                    <div class="tab-pane fade" id="past" role="tabpanel">
+                        <div id="pastBookingsContent"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Detail Modal -->
+    <div class="modal fade" id="bookingDetailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Booking Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="bookingDetailBody"></div>
+                <div class="modal-footer" id="bookingDetailFooter"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=2"></script>
+    <script src="../../js/api-client.js?v=2"></script>
+    <script src="../../js/auth.js?v=2"></script>
+    <script src="../../js/utils.js?v=2"></script>
+    <script src="../../js/dashboard-component.js?v=2"></script>
+    
+    <script>
+        DashboardComponent.init(USER_ROLES.PROVIDER, 'Manage Bookings');
+
+        let allBookings = [];
+        let bookingModal;
+
+        async function loadBookings() {
+            try {
+                // Assuming PROVIDER_BOOKINGS exists in correct shape from API_ENDPOINTS
+                allBookings = await api.get(API_ENDPOINTS.PROVIDER_BOOKINGS);
+                
+                renderAllBookings(allBookings);
+                renderPendingBookings(allBookings);
+                renderUpcomingBookings(allBookings);
+                renderPastBookings(allBookings);
+
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                Utils.handleError(error);
+                document.getElementById('allBookingsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load bookings. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        function createEmptyState(message, icon = 'bi-calendar-x') {
+            return `
+                <div class="empty-state text-center py-5 bg-white rounded border">
+                    <div class="empty-state-icon mb-3"><i class="bi ${icon}" style="font-size: 3rem; color: #ccc;"></i></div>
+                    <div class="empty-state-title h5">${message}</div>
+                </div>
+            `;
+        }
+
+        function renderAllBookings(bookings) {
+            const container = document.getElementById('allBookingsContent');
+            if (!bookings || bookings.length === 0) {
+                container.innerHTML = createEmptyState('No Bookings Yet');
+                return;
+            }
+
+            let html = '<div class="row g-4">';
+            bookings.forEach(booking => {
+                html += createBookingCard(booking);
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderPendingBookings(bookings) {
+            const pending = bookings.filter(b => b.status === 'pending');
+            const container = document.getElementById('pendingBookingsContent');
+            
+            if (pending.length === 0) {
+                container.innerHTML = createEmptyState('No Pending Requests', 'bi-calendar-check');
+                return;
+            }
+
+            let html = '<div class="row g-4">';
+            pending.forEach(booking => { html += createBookingCard(booking); });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderUpcomingBookings(bookings) {
+            const upcoming = bookings.filter(b => b.status === 'accepted' && new Date(b.booking_date) >= new Date().setHours(0,0,0,0));
+            const container = document.getElementById('upcomingBookingsContent');
+            
+            if (upcoming.length === 0) {
+                container.innerHTML = createEmptyState('No Upcoming Bookings', 'bi-calendar-check');
+                return;
+            }
+
+            let html = '<div class="row g-4">';
+            upcoming.forEach(booking => { html += createBookingCard(booking); });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderPastBookings(bookings) {
+            const past = bookings.filter(b => ['completed', 'cancelled', 'rejected'].includes(b.status) || new Date(b.booking_date) < new Date().setHours(0,0,0,0));
+            const container = document.getElementById('pastBookingsContent');
+            
+            if (past.length === 0) {
+                container.innerHTML = createEmptyState('No Past Bookings', 'bi-clock-history');
+                return;
+            }
+
+            let html = '<div class="row g-4">';
+            past.forEach(booking => { html += createBookingCard(booking); });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function createBookingCard(booking) {
+            let actionsHtml = '';
+            
+            if (booking.status === 'pending') {
+                actionsHtml = `
+                    <button class="btn btn-sm btn-success me-1" onclick="updateBookingStatus(${booking.id}, 'accept')"><i class="bi bi-check"></i> Accept</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="updateBookingStatus(${booking.id}, 'reject')"><i class="bi bi-x"></i> Reject</button>
+                `;
+            } else if (booking.status === 'accepted') {
+                actionsHtml = `
+                    <button class="btn btn-sm btn-primary" onclick="updateBookingStatus(${booking.id}, 'complete')"><i class="bi bi-check-all"></i> Mark Completed</button>
+                `;
+            }
+
+            return `
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 shadow-sm border-0 bg-white">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0 fs-6 fw-bold text-truncate" title="${booking.service_name || 'Service'}">${booking.service_name || 'Service'}</h5>
+                                ${Utils.getStatusBadge(booking.status)}
+                            </div>
+                            
+                            <div class="mb-2 text-muted small">
+                                <i class="bi bi-calendar me-2"></i>
+                                <span>${Utils.formatDate(booking.booking_date)}</span>
+                            </div>
+                            
+                            <div class="mb-2 text-muted small">
+                                <i class="bi bi-clock me-2"></i>
+                                <span>${Utils.formatTime(booking.booking_time)}</span>
+                            </div>
+                            
+                            <div class="mb-3 text-muted small text-truncate">
+                                <i class="bi bi-person me-2"></i>
+                                <span title="Customer: ${booking.customer_name || booking.customer_email || 'N/A'}">Customer: ${booking.customer_name || booking.customer_email || 'N/A'}</span>
+                            </div>
+                            
+                            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                                <div class="fs-5 fw-bold text-dark">${Utils.formatCurrency(booking.amount || 0)}</div>
+                                <div>
+                                    <button class="btn btn-sm btn-link text-decoration-none" onclick="viewBookingDetail(${booking.id})">Details</button>
+                                </div>
+                            </div>
+                            
+                            ${actionsHtml ? `<div class="mt-2 pt-2">${actionsHtml}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewBookingDetail(bookingId) {
+            const booking = allBookings.find(b => b.id === bookingId);
+            if (!booking) return;
+            
+            const body = document.getElementById('bookingDetailBody');
+            body.innerHTML = `
+                <div class="mb-3">
+                    <h6>Service</h6>
+                    <p class="text-muted">${booking.service_name || 'Service'}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Customer</h6>
+                    <p class="text-muted">${booking.customer_name || booking.customer_email || 'N/A'}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Customer Address</h6>
+                    <p class="text-muted border p-2 rounded bg-light">${booking.address || 'Address not provided'}</p>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h6>Date</h6>
+                        <p class="text-muted">${Utils.formatDate(booking.booking_date)}</p>
+                    </div>
+                    <div class="col-6">
+                        <h6>Time</h6>
+                        <p class="text-muted">${Utils.formatTime(booking.booking_time)}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <h6>Status</h6>
+                        <p>${Utils.getStatusBadge(booking.status)}</p>
+                    </div>
+                    <div class="col-6">
+                        <h6>Amount</h6>
+                        <p class="fs-5 fw-bold text-primary">${Utils.formatCurrency(booking.amount || 0)}</p>
+                    </div>
+                </div>
+                <div class="mb-1 text-muted small">
+                    Booking ID: <code>#${booking.id}</code>
+                </div>
+            `;
+
+            const footer = document.getElementById('bookingDetailFooter');
+            footer.innerHTML = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+
+            if (!bookingModal) {
+                 bookingModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
+            }
+            bookingModal.show();
+        }
+
+        async function updateBookingStatus(bookingId, action) {
+            const actionText = action === 'complete' ? 'mark as completed' : action;
+            const confirmed = await Utils.confirmAction(`Are you sure you want to ${actionText} this booking?`);
+            if (!confirmed) return;
+
+            try {
+                let endpoint;
+                if (action === 'accept') endpoint = API_ENDPOINTS.ACCEPT_BOOKING(bookingId);
+                else if (action === 'reject') endpoint = API_ENDPOINTS.REJECT_BOOKING(bookingId);
+                else if (action === 'complete') endpoint = API_ENDPOINTS.COMPLETE_BOOKING(bookingId);
+                
+                if (endpoint) {
+                    await api.post(endpoint);
+                    Utils.showToast(`Booking ${action}ed successfully`, 'success');
+                    loadBookings(); // Reload to refresh lists
+                }
+            } catch (error) {
+                Utils.handleError(error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            bookingModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
+            loadBookings();
+        });
+    </script>
+</body>
+</html>
