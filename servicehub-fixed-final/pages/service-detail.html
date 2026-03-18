@@ -224,13 +224,15 @@
                 document.getElementById('bookingTotal').textContent = Utils.formatCurrency(currentService.price);
                 document.getElementById('serviceDescription').textContent = currentService.description || 'No description available';
                 document.getElementById('serviceDuration').textContent = `${currentService.duration_minutes || 60} minutes`;
-                document.getElementById('serviceCategory').textContent = currentService.category_name || 'Uncategorized';
+                document.getElementById('serviceCategory').textContent = (currentService.category && currentService.category.name) || currentService.category_name || 'Uncategorized';
                 
                 // Provider info
-                document.getElementById('providerName').textContent = currentService.provider_email || 'Provider';
-                document.getElementById('providerNameFull').textContent = currentService.provider_email || 'Provider';
+                const providerName = (currentService.provider && currentService.provider.name) || 'Provider';
+                const providerEmail = (currentService.provider && currentService.provider.email) || '';
+                document.getElementById('providerName').textContent = providerName;
+                document.getElementById('providerNameFull').textContent = providerName;
                 
-                const initials = (currentService.provider_email || 'P').substring(0, 2).toUpperCase();
+                const initials = providerName.substring(0, 2).toUpperCase();
                 document.getElementById('providerInitials').textContent = initials;
                 
                 // Rating
@@ -255,7 +257,18 @@
 
         async function loadReviews() {
             try {
-                const reviews = await api.get(API_ENDPOINTS.SERVICE_REVIEWS(serviceId));
+                const providerId = currentService.provider && currentService.provider.id;
+                if (!providerId) {
+                    document.getElementById('reviewsContainer').innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-chat-quote fs-1"></i>
+                            <p class="mt-2">No reviews yet. Be the first to review!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                const reviewsData = await api.get(API_ENDPOINTS.PROVIDER_REVIEWS(providerId));
+                const reviews = reviewsData.reviews || reviewsData;
                 const container = document.getElementById('reviewsContainer');
                 
                 if (!reviews || reviews.length === 0) {
@@ -301,9 +314,14 @@
             timeSelect.disabled = true;
 
             try {
-                const slots = await api.get(API_ENDPOINTS.PROVIDER_SLOTS(currentService.provider_id), {
+                const providerId = currentService.provider && currentService.provider.id;
+                if (!providerId) {
+                    timeSelect.innerHTML = '<option value="">Provider not found</option>';
+                    return;
+                }
+                const slots = await api.get(API_ENDPOINTS.PROVIDER_SLOTS(providerId), {
                     service_id: serviceId,
-                    date: date
+                    date_str: date
                 });
 
                 if (!slots || slots.length === 0) {
