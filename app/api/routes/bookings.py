@@ -258,3 +258,31 @@ def admin_all_bookings(
         db.query(Booking).order_by(Booking.created_at.desc())
     )
     return [_booking_to_response(b) for b in bookings]
+
+
+# Admin assigns a booking to a provider
+@router.post("/admin/{booking_id}/assign")
+def admin_assign_booking(
+    booking_id: int,
+    provider_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    provider = db.query(User).filter(User.id == provider_id, User.role == "provider").first()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+        
+    booking.provider_id = provider_id
+    booking.status = "pending"
+    db.commit()
+    db.refresh(booking)
+
+    loaded = _load_booking_with_relations(db, booking.id)
+    return _booking_to_response(loaded)

@@ -35,6 +35,7 @@ const API_ENDPOINTS = {
     // Bookings (admin)
     ADMIN_BOOKINGS: '/bookings/admin/all',
     ADMIN_BOOKING_STATUS: (id) => `/admin/bookings/${id}/status`,
+    ADMIN_ASSIGN_BOOKING: (id) => `/bookings/admin/${id}/assign`,
     
     // Availability
     PROVIDER_AVAILABILITY: '/availability/provider/weekly',
