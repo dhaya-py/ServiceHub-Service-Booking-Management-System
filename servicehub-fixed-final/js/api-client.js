@@ -41,7 +41,25 @@ class APIClient {
 
         try {
             const response = await fetch(url, config);
-            const data = await response.json();
+
+            // Handle 204 No Content (e.g., DELETE responses)
+            if (response.status === 204) {
+                return { success: true };
+            }
+
+            // Try to parse JSON, but handle empty responses
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { message: text || 'Success' };
+                }
+            }
 
             if (!response.ok) {
                 throw {
