@@ -234,10 +234,7 @@ class DashboardComponent {
         if (dropdown) {
             dropdown.addEventListener('click', () => {
                 // Simple implementation - can be enhanced with Bootstrap dropdown
-                const confirmed = confirm('Do you want to logout?');
-                if (confirmed) {
-                    Auth.logout();
-                }
+                Auth.logout();
             });
         }
     }
@@ -248,10 +245,7 @@ class DashboardComponent {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                const confirmed = confirm('Are you sure you want to logout?');
-                if (confirmed) {
-                    Auth.logout();
-                }
+                Auth.logout();
             });
         }
     }

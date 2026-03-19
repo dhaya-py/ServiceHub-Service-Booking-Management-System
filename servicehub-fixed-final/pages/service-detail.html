@@ -371,10 +371,23 @@
             this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
 
             try {
-                const booking = await api.post(API_ENDPOINTS.BOOKINGS, {
+                // Extract time from ISO string (e.g., "2026-03-19T10:00:00" -> "10:00:00")
+                let bookingTime = time;
+                if (time.includes('T')) {
+                    bookingTime = time.split('T')[1];
+                }
+                // Ensure time has seconds (HH:MM -> HH:MM:SS)
+                if (bookingTime && bookingTime.split(':').length === 2) {
+                    bookingTime += ':00';
+                }
+
+                const booking = await api.post(API_ENDPOINTS.CREATE_BOOKING, {
                     service_id: parseInt(serviceId),
-                    date: date,
-                    time: time
+                    provider_id: currentService.provider.id,
+                    booking_date: date,
+                    booking_time: bookingTime,
+                    address: 'Customer Address',
+                    amount: currentService.discount_price || currentService.price
                 });
 
                 Utils.showToast('Booking created successfully!', 'success');
