@@ -9,6 +9,9 @@ class ProviderAvailabilityCreate(BaseModel):
     end_time: time
     is_active: Optional[bool] = True
 
+class ProviderAvailabilityBulk(BaseModel):
+    schedule: list[ProviderAvailabilityCreate]
+
 class ProviderAvailabilityResponse(ProviderAvailabilityCreate):
     id: int
     provider_id: int

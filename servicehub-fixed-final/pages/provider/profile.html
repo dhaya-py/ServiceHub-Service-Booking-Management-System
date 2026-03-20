@@ -99,7 +99,7 @@
                                     </div>
 
                                     <div class="mt-4 pt-3 border-top d-flex justify-content-end">
-                                        <button type="button" class="btn btn-primary px-4" onclick="Utils.showToast('Profile update functionality coming soon!', 'info')">Save Changes</button>
+                                        <button type="button" class="btn btn-primary px-4" onclick="saveProfile()">Save Changes</button>
                                     </div>
                                 </form>
                             </div>
@@ -112,7 +112,32 @@
             }
         }
 
+        async function saveProfile() {
+            const btn = document.querySelector('button[onclick="saveProfile()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            try {
+                const data = {
+                    name: document.getElementById('name').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    address: document.getElementById('address').value.trim(),
+                    description: document.getElementById('description').value.trim()
+                };
+                
+                await api.put(API_ENDPOINTS.ME, data);
+                Utils.showToast('Profile updated successfully', 'success');
+            } catch(error) {
+                Utils.handleError(error);
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', loadProfile);
     </script>
-</body>
-</html>
+</body></html>

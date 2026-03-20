@@ -86,7 +86,7 @@
                                         <label class="form-label">Address</label>
                                         <textarea class="form-control" id="address" rows="3" placeholder="Enter your full address">${user.address || ''}</textarea>
                                     </div>
-                                    <button type="button" class="btn btn-primary" onclick="Utils.showToast('Profile update functionality coming soon!', 'info')">Save Changes</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
                                 </form>
                             </div>
                         </div>
@@ -95,6 +95,32 @@
                 document.getElementById('profileContainer').innerHTML = html;
             } catch (error) {
                 Utils.handleError(error, 'profileContainer');
+            }
+        }
+
+        async function saveProfile() {
+            const btn = document.querySelector('button[onclick="saveProfile()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            try {
+                const data = {
+                    name: document.getElementById('name').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    address: document.getElementById('address').value.trim()
+                };
+                
+                await api.put(API_ENDPOINTS.ME, data);
+                Utils.showToast('Profile updated successfully', 'success');
+                // reload is not strictly necessary but ensures ui reflects db state accurately
+            } catch(error) {
+                Utils.handleError(error);
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             }
         }
 
