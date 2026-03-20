@@ -23,7 +23,7 @@
                         <div class="card h-100 shadow-sm border-0">
                             <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                                 <h5 class="card-title mb-0 fw-bold">Weekly Schedule</h5>
-                                <button class="btn btn-sm btn-outline-primary" onclick="Utils.showToast('Save availability coming soon', 'info')">Save Changes</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="saveAvailability()">Save Changes</button>
                             </div>
                             <div class="card-body" id="availabilityContainer">
                                 <div class="text-center py-5">
@@ -74,7 +74,10 @@
                 // Map API data back to 0-6 array
                 const scheduleMap = {};
                 if (Array.isArray(data)) {
-                    data.forEach(item => { scheduleMap[item.weekday] = item; });
+                    data.forEach(item => { 
+                        const uiDay = item.weekday === 7 ? 0 : item.weekday;
+                        scheduleMap[uiDay] = item; 
+                    });
                 }
 
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -122,6 +125,42 @@
                 parent.classList.add('bg-light');
             }
         };
+
+        async function saveAvailability() {
+            const btn = document.querySelector('button[onclick^="saveAvailability"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            try {
+                const schedule = [];
+                for(let i=0; i<7; i++) {
+                    const isActive = document.getElementById(`day_${i}`).checked;
+                    const inputs = document.getElementById(`time_inputs_${i}`).querySelectorAll('input[type="time"]');
+                    const start_time = inputs[0].value;
+                    const end_time = inputs[1].value;
+                    
+                    const backendWeekday = i === 0 ? 7 : i;
+                    
+                    if (start_time && end_time) {
+                        schedule.push({
+                            weekday: backendWeekday,
+                            start_time: start_time.length === 5 ? start_time + ':00' : start_time,
+                            end_time: end_time.length === 5 ? end_time + ':00' : end_time,
+                            is_active: isActive
+                        });
+                    }
+                }
+
+                await api.put(API_ENDPOINTS.PROVIDER_AVAILABILITY, { schedule });
+                Utils.showToast('Availability saved successfully', 'success');
+            } catch (error) {
+                Utils.handleError(error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadAvailability();

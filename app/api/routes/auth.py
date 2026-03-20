@@ -43,6 +43,25 @@ def login(
 
 
 
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
+
 @router.get("/me", response_model=UserResponse)
 def read_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/me", response_model=UserResponse)
+def update_me(update_data: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if update_data.name is not None:
+        current_user.name = update_data.name
+    if update_data.phone is not None:
+        current_user.phone = update_data.phone
+    if update_data.address is not None:
+        current_user.address = update_data.address
+    if update_data.description is not None:
+        current_user.description = update_data.description
+    if update_data.password is not None:
+        current_user.password_hash = hash_password(update_data.password)
+    
+    db.commit()
+    db.refresh(current_user)
     return current_user

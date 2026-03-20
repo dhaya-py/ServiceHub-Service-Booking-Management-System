@@ -12,6 +12,7 @@ from app.db.models.service import Service
 from app.schemas.availability import (
     ProviderAvailabilityCreate,
     ProviderAvailabilityResponse,
+    ProviderAvailabilityBulk,
     ProviderTimeOffCreate,
     ProviderTimeOffResponse,
 )
@@ -41,6 +42,32 @@ def add_weekly_availability(payload: ProviderAvailabilityCreate, db: Session = D
     db.commit()
     db.refresh(avail)
     return avail
+
+@router.put("/provider/weekly", response_model=List[ProviderAvailabilityResponse])
+def update_weekly_availability(payload: ProviderAvailabilityBulk, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role != "provider":
+        raise HTTPException(status_code=403, detail="Only providers can add availability")
+
+    # Delete existing
+    db.query(ProviderAvailability).filter(ProviderAvailability.provider_id == current_user.id).delete()
+    
+    new_avails = []
+    for sched in payload.schedule:
+        if sched.start_time >= sched.end_time:
+            continue
+        avail = ProviderAvailability(
+            provider_id=current_user.id,
+            weekday=sched.weekday,
+            start_time=sched.start_time,
+            end_time=sched.end_time,
+            is_active=sched.is_active
+        )
+        db.add(avail)
+        new_avails.append(avail)
+        
+    db.commit()
+    return new_avails
+
 
 
 
