@@ -146,7 +146,7 @@
             if(!confirmed) return;
 
             try {
-                await api.post(API_ENDPOINTS.ADMIN_APPROVE_PROVIDER(id));
+                await api.put(API_ENDPOINTS.ADMIN_APPROVE_PROVIDER(id) + "?approve=true");
                 Utils.showToast(`Provider approved successfully.`, 'success');
                 loadProviders();
             } catch (error) {

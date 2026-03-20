@@ -208,11 +208,10 @@
             if(!confirmed) return;
 
             try {
-                if (API_ENDPOINTS.ADMIN_USER_STATUS) {
-                    await api.post(API_ENDPOINTS.ADMIN_USER_STATUS(id), { is_active: !currentlyActive });
+                if (API_ENDPOINTS.ADMIN_USER_ACTIVATE) {
+                    await api.put(API_ENDPOINTS.ADMIN_USER_ACTIVATE(id) + "?active=" + !currentlyActive);
                 } else {
-                    // Fallback generic endpoint assumption
-                    await api.put(`/admin/users/${id}`, { is_active: !currentlyActive });
+                    await api.put(`/admin/users/${id}/activate?active=${!currentlyActive}`);
                 }
                 Utils.showToast(`User ${action}d successfully.`, 'success');
                 loadUsers();
