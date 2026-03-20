@@ -113,7 +113,7 @@
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
                 // Load providers first
                 allProviders = await api.get(API_ENDPOINTS.PROVIDERS_LIST);
-                allBookings = await api.get(API_ENDPOINTS.BOOKINGS);
+                allBookings = await api.get(API_ENDPOINTS.ADMIN_BOOKINGS);
                 renderBookings();
             } catch (error) {
                 Utils.handleError(error);
