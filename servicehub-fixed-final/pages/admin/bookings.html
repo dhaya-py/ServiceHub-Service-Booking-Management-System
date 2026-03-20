@@ -103,18 +103,21 @@
         DashboardComponent.init(USER_ROLES.ADMIN, 'Manage Bookings');
 
         let allBookings = [];
+        let allProviders = [];
         let currentStatusFilter = 'all';
         let bookingModal;
 
-        async function loadBookings() {
+        async function loadData() {
             const tbody = document.getElementById('bookingsTableBody');
             try {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>';
+                // Load providers first
+                allProviders = await api.get(API_ENDPOINTS.PROVIDERS_LIST);
                 allBookings = await api.get(API_ENDPOINTS.BOOKINGS);
                 renderBookings();
             } catch (error) {
                 Utils.handleError(error);
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load bookings.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load data.</td></tr>`;
             }
         }
 
@@ -205,13 +208,49 @@
                     <small class="text-muted text-uppercase fw-bold">Address</small>
                     <div class="p-2 border rounded bg-light small">${b.address || 'No address provided'}</div>
                 </div>
+                
+                <hr>
+                <div class="mb-3">
+                    <small class="text-muted text-uppercase fw-bold">Reassign Provider</small>
+                    <div class="d-flex mt-2">
+                        <select class="form-select me-2" id="newProviderSelect">
+                            <option value="">Select a new provider...</option>
+                            ${allProviders.map(p => `<option value="${p.id}" ${p.id === b.provider_id ? 'selected' : ''}>${p.name} (ID: ${p.id})</option>`).join('')}
+                        </select>
+                        <button class="btn btn-primary" onclick="reassignProvider(${b.id})">Assign</button>
+                    </div>
+                </div>
             `;
             bookingModal.show();
         }
 
+        async function reassignProvider(bookingId) {
+            const select = document.getElementById('newProviderSelect');
+            const newProviderId = select.value;
+            if (!newProviderId) {
+                Utils.showToast('Please select a provider first.', 'warning');
+                return;
+            }
+            try {
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Assigning...';
+                btn.disabled = true;
+
+                await api.post(API_ENDPOINTS.ADMIN_ASSIGN_BOOKING(bookingId) + '?provider_id=' + newProviderId);
+                Utils.showToast('Provider assigned successfully!', 'success');
+                bookingModal.hide();
+                loadData(); // Reload all data
+            } catch (error) {
+                Utils.handleError(error);
+                btn.innerHTML = 'Assign';
+                btn.disabled = false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             bookingModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
-            loadBookings();
+            loadData();
         });
     </script>
 </body>
