@@ -6,9 +6,9 @@ from datetime import datetime
 class UserListItem(BaseModel):
     id: int
     email: str
-    name: str
+    name: Optional[str] = None
     role: str
-    is_active: bool
+    is_active: Optional[bool] = True
     is_provider_approved: Optional[bool] = None
     created_at: Optional[datetime] = None
 
@@ -20,7 +20,7 @@ class ServiceListItem(BaseModel):
     provider_id: int
     name: str
     price: float
-    is_active: bool
+    is_active: Optional[bool] = True
     created_at: Optional[datetime]
 
     class Config:
