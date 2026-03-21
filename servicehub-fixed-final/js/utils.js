@@ -38,6 +38,13 @@ const Utils = {
     // Format time only
     formatTime(timeString) {
         if (!timeString) return '';
+        if (timeString.includes('T')) {
+            const d = new Date(timeString);
+            return new Intl.DateTimeFormat('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(d);
+        }
         const [hours, minutes] = timeString.split(':');
         const date = new Date();
         date.setHours(parseInt(hours), parseInt(minutes));
