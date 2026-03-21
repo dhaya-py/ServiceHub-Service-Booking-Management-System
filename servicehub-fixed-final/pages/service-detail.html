@@ -194,6 +194,57 @@
         </div>
     </div>
 
+    <!-- Mock Payment Modal -->
+    <div class="modal fade" id="paymentModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title"><i class="bi bi-credit-card me-2"></i>Secure Checkout</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <h6 class="text-muted text-uppercase mb-1">Total Amount To Pay</h6>
+                        <h2 class="display-6 fw-bold text-primary mb-0" id="paymentAmountDisplay">₹0</h2>
+                    </div>
+                    
+                    <form id="paymentForm" onsubmit="return false;">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Cardholder Name</label>
+                            <input type="text" class="form-control form-control-lg bg-light" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Card Number</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light"><i class="bi bi-credit-card-2-front"></i></span>
+                                <input type="text" class="form-control bg-light" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-muted small">Expiry Date</label>
+                                <input type="text" class="form-control form-control-lg bg-light" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-muted small">CVV</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="password" class="form-control bg-light" placeholder="***" maxlength="3" required>
+                                    <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-lg shadow-sm" id="confirmPaymentBtn">
+                            Pay Securely
+                        </button>
+                    </form>
+                    <div class="text-center mt-3 text-muted small">
+                        <i class="bi bi-shield-lock text-success me-1"></i> Payments are mock configured securely via SSL payload.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/config.js?v=3"></script>
     <script src="../js/api-client.js?v=3"></script>
@@ -203,6 +254,7 @@
     <script>
         let currentService = null;
         const serviceId = Utils.getQueryParam('id');
+        let paymentModalInstance;
 
         if (!serviceId) {
             window.location.href = 'services.html';
@@ -360,15 +412,31 @@
                 return;
             }
 
-            // Confirm booking
-            const confirmed = await Utils.confirmAction(
-                `Book ${currentService.name} for ${Utils.formatDate(date)} at ${Utils.formatTime(time)}?`
-            );
+            // Set the payment display block
+            const payAmount = currentService.discount_price || currentService.price;
+            document.getElementById('paymentAmountDisplay').textContent = Utils.formatCurrency(payAmount);
 
-            if (!confirmed) return;
+            // Open the Payment Gateway immediately
+            if (!paymentModalInstance) {
+                paymentModalInstance = new bootstrap.Modal(document.getElementById('paymentModal'));
+            }
+            paymentModalInstance.show();
+        });
 
-            this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
+        // Trigger dummy processing flow inside Payment Modal
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const payBtn = document.getElementById('confirmPaymentBtn');
+            const originalBtnText = payBtn.innerHTML;
+            payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing Payment...';
+            payBtn.disabled = true;
+
+            const date = document.getElementById('bookingDate').value;
+            const time = document.getElementById('bookingTime').value;
+
+            // Simulate Network processing time
+            await new Promise((r) => setTimeout(r, 1500));
 
             try {
                 // Extract time from ISO string (e.g., "2026-03-19T10:00:00" -> "10:00:00")
@@ -390,7 +458,8 @@
                     amount: currentService.discount_price || currentService.price
                 });
 
-                Utils.showToast('Booking created successfully!', 'success');
+                Utils.showToast('Payment Successful! Booking Confirmed', 'success');
+                paymentModalInstance.hide();
                 
                 setTimeout(() => {
                     window.location.href = 'customer/bookings.html';
@@ -399,8 +468,8 @@
             } catch (error) {
                 console.error('Booking error:', error);
                 Utils.handleError(error);
-                this.disabled = false;
-                this.innerHTML = '<i class="bi bi-calendar-check me-2"></i>Book Now';
+                payBtn.disabled = false;
+                payBtn.innerHTML = originalBtnText;
             }
         });
 

@@ -174,13 +174,20 @@ class DashboardComponent {
                     </button>
                 </div>
                 
-                <div class="navbar-user" id="userDropdownToggle">
-                    <div class="user-avatar">${initials}</div>
-                    <div class="user-info">
-                        <div class="user-name">${user.email}</div>
-                        <div class="user-role">${user.role}</div>
+                <div class="navbar-user dropdown">
+                    <div class="d-flex align-items-center" id="userDropdownToggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                        <div class="user-avatar">${initials}</div>
+                        <div class="user-info">
+                            <div class="user-name">${user.email}</div>
+                            <div class="user-role">${user.role}</div>
+                        </div>
+                        <i class="bi bi-chevron-down ms-2"></i>
                     </div>
-                    <i class="bi bi-chevron-down"></i>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userDropdownToggle">
+                        <li><a class="dropdown-item py-2" href="${role === 'customer' ? '/pages/customer/profile.html' : role === 'provider' ? '/pages/provider/profile.html' : '#'}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger py-2" href="#" id="navbarLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
                 </div>
             </div>
         `;
@@ -230,10 +237,10 @@ class DashboardComponent {
 
     // Setup user dropdown
     setupUserDropdown() {
-        const dropdown = document.getElementById('userDropdownToggle');
-        if (dropdown) {
-            dropdown.addEventListener('click', () => {
-                // Simple implementation - can be enhanced with Bootstrap dropdown
+        const logoutBtn = document.getElementById('navbarLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 Auth.logout();
             });
         }
