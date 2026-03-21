@@ -216,4 +216,4 @@ def get_available_slots_for_date(
             slots.append(slot_start.isoformat())
             slot_start += timedelta(minutes=interval_minutes)
 
-    return slots
+    return sorted(list(set(slots)))
