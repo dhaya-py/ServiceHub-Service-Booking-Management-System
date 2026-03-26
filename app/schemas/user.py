@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     password: str
+    role: str = "customer"
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

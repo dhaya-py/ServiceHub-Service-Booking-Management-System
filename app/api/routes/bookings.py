@@ -98,7 +98,6 @@ def create_booking(
         address=booking.address,
         amount=booking.amount,
         status="pending",
-        payment_status="paid"
     )
 
     db.add(new_booking)
