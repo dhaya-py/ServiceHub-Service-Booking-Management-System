@@ -84,6 +84,13 @@ class DashboardComponent {
                         <span>Reviews</span>
                     </a>
                 </li>
+                <li class="nav-section-title">Finance</li>
+                <li class="nav-item">
+                    <a href="accounting.html" class="nav-link" data-page="accounting">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Earnings</span>
+                    </a>
+                </li>
                 <li class="nav-section-title">Account</li>
                 <li class="nav-item">
                     <a href="profile.html" class="nav-link" data-page="profile">
@@ -132,6 +139,13 @@ class DashboardComponent {
                     <a href="bookings.html" class="nav-link" data-page="bookings">
                         <i class="bi bi-calendar-check"></i>
                         <span>Bookings</span>
+                    </a>
+                </li>
+                <li class="nav-section-title">Finance</li>
+                <li class="nav-item">
+                    <a href="accounting.html" class="nav-link" data-page="accounting">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Accounting</span>
                     </a>
                 </li>
             </ul>
@@ -184,7 +198,7 @@ class DashboardComponent {
                         <i class="bi bi-chevron-down ms-2"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userDropdownToggle">
-                        <li><a class="dropdown-item py-2" href="${role === 'customer' ? '/pages/customer/profile.html' : role === 'provider' ? '/pages/provider/profile.html' : '#'}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="${user.role === 'customer' ? '/pages/customer/profile.html' : user.role === 'provider' ? '/pages/provider/profile.html' : '#'}"><i class="bi bi-person me-2"></i>My Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger py-2" href="#" id="navbarLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                     </ul>
