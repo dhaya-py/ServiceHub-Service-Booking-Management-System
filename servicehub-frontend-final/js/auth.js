@@ -38,14 +38,13 @@ class Auth {
 
     static async register(email, password, role = USER_ROLES.CUSTOMER, name = null) {
         try {
-            // ✅ FIXED: Backend requires 'name' field (not optional)
             const userName = name || email.split('@')[0];
             
             const data = await api.post(API_ENDPOINTS.REGISTER, {
                 email,
-                name: userName,  // ✅ Required by backend
-                password
-                // ✅ NOTE: Backend doesn't accept 'role' in registration - defaults to 'customer'
+                name: userName,
+                password,
+                role  // Send selected role (customer/provider) to backend
             }, false);
             return data;
         } catch (error) {

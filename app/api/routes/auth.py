@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.db.base import get_db
 from app.db.models.user import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, AdminCreate, UserUpdate
 from app.core.security import create_access_token, hash_password, verify_password, get_current_user
 
 router = APIRouter()
@@ -15,10 +15,46 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    # Only allow customer and provider via public registration
+    allowed_roles = ("customer", "provider")
+    role = user.role if user.role in allowed_roles else "customer"
+
     new_user = User(
         email=user.email,
         name=user.name,
         password_hash=hash_password(user.password),
+        role=role,
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
+
+
+@router.post("/admin/create-user", response_model=UserResponse)
+def admin_create_user(
+    user: AdminCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Only existing admins can create users with any role (including admin)."""
+    if not current_user or current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    existing = db.query(User).filter(User.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    if user.role not in ("customer", "provider", "admin"):
+        raise HTTPException(status_code=400, detail="Invalid role. Must be customer, provider, or admin")
+
+    new_user = User(
+        email=user.email,
+        name=user.name,
+        password_hash=hash_password(user.password),
+        role=user.role,
     )
 
     db.add(new_user)
@@ -43,7 +79,8 @@ def login(
 
 
 
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+
+
 
 @router.get("/me", response_model=UserResponse)
 def read_me(current_user: User = Depends(get_current_user)):

@@ -161,21 +161,38 @@
             try {
                 const data = await api.get(API_ENDPOINTS.CUSTOMER_DASHBOARD);
                 
-                // Update stats
-                document.getElementById('totalBookings').textContent = data.total_bookings || 0;
-                document.getElementById('upcomingBookings').textContent = data.upcoming_bookings?.length || 0;
-                document.getElementById('completedBookings').textContent = 
-                    data.past_bookings?.filter(b => b.status === 'completed').length || 0;
-                document.getElementById('totalSpent').textContent = Utils.formatCurrency(data.total_spent || 0);
+                // Backend returns: { overview, upcoming, past, recommendations, spending_summary }
+                const overview = data.overview || {};
+
+                // Update stats from overview
+                document.getElementById('totalBookings').textContent = overview.total_bookings || 0;
+                document.getElementById('upcomingBookings').textContent = data.upcoming?.length || 0;
+                document.getElementById('completedBookings').textContent = overview.completed || 0;
+                document.getElementById('totalSpent').textContent = Utils.formatCurrency(overview.total_spent || 0);
+
+                // Normalize booking fields for UI (backend uses booking_date/booking_time/amount)
+                const normalizeBooking = (b) => ({
+                    ...b,
+                    date: b.booking_date || b.date,
+                    time: b.booking_time || b.time,
+                    price: b.amount || b.price || 0,
+                });
 
                 // Load upcoming bookings
-                loadUpcomingBookings(data.upcoming_bookings || []);
+                const upcoming = (data.upcoming || []).map(normalizeBooking);
+                loadUpcomingBookings(upcoming);
 
-                // Load recommended services
-                loadRecommendedServices(data.recommended_services || []);
+                // Load recommended services (backend: recommendations with service_name, service_id)
+                const recs = (data.recommendations || []).map(r => ({
+                    ...r,
+                    id: r.service_id || r.id,
+                    name: r.service_name || r.name,
+                }));
+                loadRecommendedServices(recs);
 
-                // Load recent activity
-                loadRecentActivity(data);
+                // Load recent activity (combine upcoming + past)
+                const past = (data.past || []).map(normalizeBooking);
+                loadRecentActivity({ upcoming_bookings: upcoming, past_bookings: past });
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
