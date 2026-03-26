@@ -71,7 +71,9 @@ const API_ENDPOINTS = {
     ADMIN_SERVICE_TOGGLE: (id) => `/admin/services/${id}/toggle`,
     ADMIN_DELETE_REVIEW: (id) => `/admin/reviews/${id}`,
     ADMIN_BOOKINGS_LIST: '/admin/bookings',
-    BOOKINGS: '/admin/bookings' // fallback for cached admin/bookings.html
+    BOOKINGS: '/admin/bookings', // fallback for cached admin/bookings.html
+    ADMIN_PAYMENTS: '/payments/admin',
+    PROVIDER_PAYMENTS: '/payments/provider/me'
 };
 
 // User roles

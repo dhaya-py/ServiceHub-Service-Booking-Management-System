@@ -31,6 +31,7 @@ class BookingResponse(BaseModel):
     address: str
     amount: float
     status: str
+    payment_status: Optional[str] = "pending"
     created_at: datetime
     updated_at: Optional[datetime]
 
@@ -56,6 +57,7 @@ class BookingResponse(BaseModel):
             "address": booking.address,
             "amount": booking.amount,
             "status": booking.status,
+            "payment_status": getattr(booking, "payment_status", "pending"),
             "created_at": booking.created_at,
             "updated_at": booking.updated_at,
             "service_name": booking.service.name if booking.service else None,

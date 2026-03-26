@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting - Admin Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../css/global.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar will be injected here -->
+        <nav class="sidebar"></nav>
+
+        <div class="main-content">
+            <!-- Navbar will be injected here -->
+            <header class="top-navbar d-flex justify-content-between align-items-center"></header>
+
+            <div class="dashboard-content">
+                <!-- Summary Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card border-0 shadow-sm">
+                            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-bank"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3 class="stat-title text-muted">Platform Total Revenue</h3>
+                                <div class="stat-value text-success display-6 fw-bold" id="totalRevenue">₹0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payments Table -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-receipt me-2"></i>Global Transaction Ledger</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Transaction ID</th>
+                                        <th>Booking ID</th>
+                                        <th>Customer</th>
+                                        <th>Provider</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border text-primary"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../js/config.js?v=5"></script>
+    <script src="../../js/utils.js?v=5"></script>
+    <script src="../../js/api-client.js?v=5"></script>
+    <script src="../../js/auth.js?v=5"></script>
+    <script src="../../js/dashboard-component.js?v=5"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize dashboard
+            DashboardComponent.init('admin', 'Platform Accounting');
+            
+            try {
+                const response = await api.get(API_ENDPOINTS.ADMIN_PAYMENTS);
+                const tbody = document.getElementById('paymentsTableBody');
+                
+                document.getElementById('totalRevenue').textContent = Utils.formatCurrency(response.total_revenue);
+
+                if (!response.payments || response.payments.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No transactions registered yet.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                response.payments.forEach(payment => {
+                    html += `
+                        <tr>
+                            <td><span class="text-muted small">${Utils.formatDateTime(payment.created_at)}</span></td>
+                            <td><span class="badge bg-light text-dark font-monospace border">${payment.transaction_id || 'N/A'}</span></td>
+                            <td><a href="bookings.html">#${payment.booking_id}</a></td>
+                            <td class="fw-semibold">${payment.customer_name || 'N/A'}</td>
+                            <td class="fw-semibold text-primary">${payment.provider_name || 'N/A'}</td>
+                            <td class="fw-bold">${Utils.formatCurrency(payment.amount)}</td>
+                            <td><span class="badge bg-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Cleared</span></td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('paymentsTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading global ledger.</td></tr>';
+            }
+        });
+    </script>
+</body>
+</html>

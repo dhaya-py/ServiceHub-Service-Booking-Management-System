@@ -98,11 +98,26 @@ def create_booking(
         address=booking.address,
         amount=booking.amount,
         status="pending",
+        payment_status="paid"
     )
 
     db.add(new_booking)
     db.commit()
     db.refresh(new_booking)
+
+    import uuid
+    from app.db.models.payment import Payment
+    tx_id = f"tx_{uuid.uuid4().hex[:10]}"
+    new_payment = Payment(
+        booking_id=new_booking.id,
+        customer_id=current_user.id,
+        provider_id=booking.provider_id,
+        amount=booking.amount,
+        status="completed",
+        transaction_id=tx_id
+    )
+    db.add(new_payment)
+    db.commit()
 
     loaded = _load_booking_with_relations(db, new_booking.id)
     return _booking_to_response(loaded)

@@ -14,6 +14,7 @@ from app.api.routes import customer_dashboard as customer_dashboard_router
 from app.api.routes import admin_dashboard as admin_dashboard_router
 from app.api.routes import admin_dashboard_advanced as admin_dashboard_advanced_router
 from app.api.routes import customer_dashboard_advanced as customer_dashboard_advanced_router
+from app.api.routes import payments as payments_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -50,3 +51,4 @@ app.include_router(customer_dashboard_router.router)
 app.include_router(admin_dashboard_router.router)
 app.include_router(admin_dashboard_advanced_router.router)
 app.include_router(customer_dashboard_advanced_router.router)
+app.include_router(payments_router.router, prefix="/api")
