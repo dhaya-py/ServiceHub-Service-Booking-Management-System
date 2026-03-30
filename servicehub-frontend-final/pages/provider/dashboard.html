@@ -205,16 +205,24 @@
 
                 dashboardData = { summary, earnings, bookingStats, reviews };
 
-                // Update stats
+                // Update stats — map backend field names to frontend IDs
                 document.getElementById('totalEarnings').textContent = Utils.formatCurrency(earnings.total_earnings || 0);
-                document.getElementById('activeBookings').textContent = bookingStats.active_count || 0;
-                document.getElementById('completedBookings').textContent = bookingStats.completed_count || 0;
+                // active = total - completed - cancelled - rejected (i.e. pending + accepted)
+                const activeCount = (bookingStats.total || 0) - (bookingStats.completed || 0) - (bookingStats.cancelled || 0) - (bookingStats.rejected || 0);
+                document.getElementById('activeBookings').textContent = activeCount;
+                document.getElementById('completedBookings').textContent = bookingStats.completed || 0;
                 document.getElementById('averageRating').textContent = (reviews.average_rating || 0).toFixed(1);
 
                 // Load sections
                 loadTodayBookings(summary.today_bookings || []);
-                loadBookingStats(bookingStats);
-                loadRecentReviews(reviews.recent_reviews || []);
+                // Normalize booking stats fields for the stats section
+                loadBookingStats({
+                    pending_count: bookingStats.pending || 0,
+                    accepted_count: bookingStats.accepted || 0,
+                    completed_count: bookingStats.completed || 0,
+                    total_count: bookingStats.total || 0,
+                });
+                loadRecentReviews(reviews.reviews || []);
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);

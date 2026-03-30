@@ -169,19 +169,45 @@
             try {
                 const data = await api.get(API_ENDPOINTS.ADMIN_DASHBOARD);
 
-                // Update stats
-                document.getElementById('totalUsers').textContent = data.total_users || 0;
-                document.getElementById('totalProviders').textContent = data.total_providers || 0;
-                document.getElementById('totalServices').textContent = data.total_services || 0;
-                document.getElementById('totalBookings').textContent = data.total_bookings || 0;
+                // Backend returns: { kpis, bookings_by_status, top_providers_by_earnings, earnings_by_category, bookings_trend_last_30_days }
+                const kpis = data.kpis || {};
 
-                // Load charts
-                loadBookingTrendsChart(data.booking_trends || []);
-                loadEarningsChart(data.earnings_by_category || []);
+                // Update stats from kpis
+                document.getElementById('totalUsers').textContent = kpis.total_users || 0;
+                document.getElementById('totalProviders').textContent = kpis.total_providers || 0;
+                document.getElementById('totalServices').textContent = kpis.total_services || 0;
+                document.getElementById('totalBookings').textContent = kpis.total_bookings || 0;
 
-                // Load tables
-                loadTopProviders(data.top_providers || []);
-                loadRecentActivity(data);
+                // Load charts — normalize field names for chart functions
+                const trends = (data.bookings_trend_last_30_days || []).map(t => ({
+                    date: t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short'}) : '',
+                    count: t.bookings || 0,
+                }));
+                loadBookingTrendsChart(trends);
+
+                const earnings = (data.earnings_by_category || []).map(e => ({
+                    category_name: e.category_name || 'Unknown',
+                    total_earnings: e.total_earnings || 0,
+                }));
+                loadEarningsChart(earnings);
+
+                // Load top providers table — normalize field names
+                const providers = (data.top_providers_by_earnings || []).map(p => ({
+                    email: p.provider_name || 'Provider',
+                    name: p.provider_name,
+                    total_services: '-',
+                    total_bookings: p.completed_bookings || 0,
+                    average_rating: 0,
+                    total_revenue: p.total_earnings || 0,
+                }));
+                loadTopProviders(providers);
+
+                // Activity section — use kpis data
+                loadRecentActivity({
+                    bookings_today: kpis.bookings_today || 0,
+                    bookings_last_7_days: kpis.bookings_last_7_days || 0,
+                    new_users: 0,
+                });
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
